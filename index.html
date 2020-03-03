@@ -47,7 +47,7 @@
 
 <body>
   <h1>
-    Kurs Reacta - Tydzień 3 - zadanie 8 - dodanie obsługi edycji (z użyciem arguments) i dodawania
+    Kurs Reacta - Tydzień 3 - zadanie 8 - dodanie obsługi edycji i dodawania
   </h1>
   <hr />
 
@@ -59,21 +59,16 @@
         title: "",
         totalTimeInMinutes: ""
       };
-      onTitleChange = e => {
+      handleInputChange = e => {
         this.setState({
-          title: e.target.value
-        });
-        // console.log(e.target.value);
-      };
-      onTotalTimeInMinutesChange = e => {
-        this.setState({
-          totalTimeInMinutes: e.target.value
+          [e.target.name]: e.target.value
         });
       };
+      
       add = () => {
         const { onCreate } = this.props;
         const { title, totalTimeInMinutes } = this.state;
-        if (title.length < 3 || !totalTimeInMinutes) return;
+        if (title.length < 3 || totalTimeInMinutes <= 0) return;
         onCreate({
           id: uuid.v4(),
           title,
@@ -96,7 +91,7 @@
           <div className="TimeboxCreator">
             <label>
               Co robisz?
-              <input value={title} type="text" onChange={this.onTitleChange} />
+              <input value={title} type="text" onChange={this.handleInputChange} name="title" />
             </label>
             <br />
             <label>
@@ -104,7 +99,8 @@
               <input
                 value={totalTimeInMinutes}
                 type="number"
-                onChange={this.onTotalTimeInMinutesChange}
+                onChange={this.handleInputChange}
+                name="totalTimeInMinutes"
               />
             </label>
             <br />
@@ -114,28 +110,41 @@
       }
     }
 
-    const EditTimebox = ({
-      title,
-      totalTimeInMinutes,
-      onUpdate,
-      cancelEdit
-    }) => {
-      // console.log(onUpdate);
-      return (
-        <form onSubmit={onUpdate} className="TimeboxEditor">
-          <label>title:</label>
-          <input type="text" defaultValue={title} name="updateTitle" /><br/>
-          <label>time:</label>
-          <input
-            type="number"
-            defaultValue={totalTimeInMinutes}
-            name="updateTotalTimeInMinutes"
-          /><br/>
-          <button type="submit">update</button>
-          <button onClick={cancelEdit}>cancel</button>
-        </form>
-      );
-    };
+    class EditTimebox extends React.Component {
+      state = {
+        title: this.props.title,
+        totalTimeInMinutes: this.props.totalTimeInMinutes
+      }
+      handleInput = e=>{
+        this.setState({
+          [e.target.name]: e.target.value
+        })
+      }
+      update=()=>{
+        const {id, onUpdate} = this.props;
+        const {title, totalTimeInMinutes} = this.state;
+        if(title.length < 3 || totalTimeInMinutes <= 0) return;
+        onUpdate(id,{id,title,totalTimeInMinutes});
+      }
+      render(){
+        const {title, totalTimeInMinutes} = this.state;
+        const { cancelEdit } = this.props;
+        return(
+          <div  className="TimeboxEditor">
+            <label>title:</label>
+            <input type="text" value={title} name="title" onChange={this.handleInput} /><br/>
+            <label>time:</label>
+            <input
+              type="number"
+              value={totalTimeInMinutes}
+              name="totalTimeInMinutes" onChange={this.handleInput}
+            /><br/>
+            <button type="submit" onClick={this.update}>update</button>
+            <button onClick={cancelEdit}>cancel</button>
+          </div>
+        )
+      }
+    } 
 
     const Timebox = ({
       title,
@@ -183,7 +192,6 @@
             }
           ]
         };
-        this.handleEditTimebox = this.handleEditTimebox.bind(this);
       }
 
       handleCreate = (createdTimebox) => {
@@ -200,43 +208,35 @@
         }))
       };
 
-      handleEditTimebox() {
-        // console.log(arguments);
+      handleEditTimebox= (id, title, totalTimeInMinutes, isEditable) =>{
         this.setState({
-          id: arguments[0],
-          title: arguments[1],
-          totalTimeInMinutes: arguments[2],
-          isEditable: !this.state.isEditable
+          id,
+          title,
+          totalTimeInMinutes,
+          isEditable: true
         });
       }
 
       cancelEdit = () => {
         this.setState({
-          isEditable: !this.state.isEditable
+          isEditable: false
         });
       };
 
-      handleUpdateTimebox = e => {
-        e.preventDefault();
+      handleUpdateTimebox = (id, updatedTimebox) => {
         this.setState({
-          timeboxes: this.state.timeboxes.map(timebox => {
-            if (timebox.id === this.state.id) {
-              timebox.title = e.target.updateTitle.value;
-              timebox.totalTimeInMinutes =
-                e.target.updateTotalTimeInMinutes.value;
-            }
-            return timebox;
-          }),
+          timeboxes: this.state.timeboxes.map(timebox => timebox.id === id ? updatedTimebox : timebox ),
           isEditable: false
         });
       };
 
       render() {
-        const { isEditable, title, totalTimeInMinutes } = this.state;
+        const { isEditable,id, title, totalTimeInMinutes } = this.state;
         return (
           <>
             {isEditable ? (
               <EditTimebox
+                id={id}
                 title={title}
                 totalTimeInMinutes={totalTimeInMinutes}
                 onUpdate={this.handleUpdateTimebox}
@@ -258,7 +258,7 @@
                       }
                     />
                   )
-                )}{" "}
+                )}
               </>
             )}
           </>
