@@ -81,12 +81,7 @@
       };
       render() {
         const { title, totalTimeInMinutes } = this.state;
-        const {
-          onCreate,
-          onTitleChange,
-          onTotalTimeInMinutesChange
-        } = this.props;
-
+        
         return (
           <div className="TimeboxCreator">
             <label>
@@ -202,7 +197,7 @@
 
       handleDelete = id => {
         const index = this.state.timeboxes.findIndex(timebox => timebox.id === id);
-        let timeboxes = this.state.timeboxes.splice(index, 1);
+        this.state.timeboxes.splice(index, 1);
         this.setState(prevState => ({
           timeboxes: prevState.timeboxes
         }))
